@@ -27,5 +27,5 @@ sleep 1
 ./setAnchorPeer.sh
 sleep 1
 ./deploy_chaincode.sh ch1
-# sleep 1
-# ./deploy_chaincode.sh ch2
+sleep 1
+./deploy_chaincode.sh ch2
