@@ -26,10 +26,6 @@ sleep 1
 sleep 1
 ./setAnchorPeer.sh
 sleep 1
-./deploy_chaincode.sh ch1
+./deploy_chaincode.sh
 sleep 1
-./deploy_chaincode.sh ch2
-sleep 1
-./deploy_token.sh ch1
-sleep 1
-./deploy_token.sh ch2
+./deploy_token.sh

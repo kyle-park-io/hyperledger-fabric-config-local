@@ -4,9 +4,6 @@ export BIN_DIR="${TEST_NETWORK_HOME}/bin"
 export LOG_DIR="${TEST_NETWORK_HOME}/log"
 export FABRIC_CFG_PATH=${TEST_NETWORK_HOME}/config/peer
 
-export CHANNEL_NAME=${1}
-: ${CHANNEL_NAME:="channel0"}
-
 export CORE_PEER_ADDRESS=peer0.org1.example.com:7051
 export CORE_PEER_TLS_ENABLED=true
 export CORE_PEER_MSPCONFIGPATH="${TEST_NETWORK_HOME}/organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp"
@@ -23,12 +20,13 @@ export MAX_RETRY=5
 export DELAY=2
 
 function deployChaincode() {
+    export CHANNEL_NAME=$1
     mkdir -p ${TEST_NETWORK_HOME}/log/${CHANNEL_NAME}
 
-    TOKEN_NAME=$1
+    TOKEN_NAME=$2
     CHAINCODE_NAME="erc20"
-    CHAINCODE_VERSION=$2
-    CHAINCODE_SEQUENCE=$3
+    CHAINCODE_VERSION=$3
+    CHAINCODE_SEQUENCE=$4
     CHAINCODE_PATH=${TEST_NETWORK_HOME}/chaincode/chaincode/${CHAINCODE_NAME}
     CHAINCODE_PACKAGE_PATH=${TEST_NETWORK_HOME}/packages/${TOKEN_NAME}.tar.gz
     LOG_PATH=${LOG_DIR}/${CHANNEL_NAME}/${TOKEN_NAME}.log
@@ -184,9 +182,14 @@ function verifyResult() {
 }
 
 function main() {
-    deployChaincode token1 1.0 1
-    deployChaincode token2 1.0 1
-    deployChaincode token3 1.0 1
+    # ch1
+    deployChaincode ch1 medium1 1.0 1
+    deployChaincode ch1 medium2 1.0 1
+    deployChaincode ch1 medium3 1.0 1
+    # ch2
+    deployChaincode ch2 medium4 1.0 1
+    deployChaincode ch2 medium5 1.0 1
+    deployChaincode ch2 medium6 1.0 1
 }
 
 main

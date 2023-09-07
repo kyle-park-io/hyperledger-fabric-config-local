@@ -4,9 +4,6 @@ export BIN_DIR="${TEST_NETWORK_HOME}/bin"
 export LOG_DIR="${TEST_NETWORK_HOME}/log"
 export FABRIC_CFG_PATH=${TEST_NETWORK_HOME}/config/peer
 
-export CHANNEL_NAME=${1}
-: ${CHANNEL_NAME:="channel0"}
-
 export CORE_PEER_ADDRESS=peer0.org1.example.com:7051
 export CORE_PEER_TLS_ENABLED=true
 export CORE_PEER_MSPCONFIGPATH="${TEST_NETWORK_HOME}/organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp"
@@ -23,11 +20,12 @@ export MAX_RETRY=5
 export DELAY=2
 
 function deployChaincode() {
+    export CHANNEL_NAME=$1
     mkdir -p ${TEST_NETWORK_HOME}/log/${CHANNEL_NAME}
 
-    CHAINCODE_NAME=$1
-    CHAINCODE_VERSION=$2
-    CHAINCODE_SEQUENCE=$3
+    CHAINCODE_NAME=$2
+    CHAINCODE_VERSION=$3
+    CHAINCODE_SEQUENCE=$4
     CHAINCODE_PATH=${TEST_NETWORK_HOME}/chaincode/chaincode/${CHAINCODE_NAME}
     CHAINCODE_PACKAGE_PATH=${TEST_NETWORK_HOME}/packages/${CHAINCODE_NAME}.tar.gz
     LOG_PATH=${LOG_DIR}/${CHANNEL_NAME}/${CHAINCODE_NAME}.log
@@ -46,26 +44,28 @@ function deployChaincode() {
     echo "Chaincode is packaged"
 
     # install
-    for var in {0..2}; do
-        PEER_PORT=$(((($var + 7) * 1000) + 51))
-        export CORE_PEER_ADDRESS=peer${var}.org1.example.com:${PEER_PORT}
-        export CORE_PEER_TLS_CERT_FILE=${TEST_NETWORK_HOME}/organizations/peerOrganizations/org1.example.com/peers/peer${var}.org1.example.com/tls/server.crt
-        export CORE_PEER_TLS_KEY_FILE=${TEST_NETWORK_HOME}/organizations/peerOrganizations/org1.example.com/peers/peer${var}.org1.example.com/tls/server.key
-        export CORE_PEER_TLS_ROOTCERT_FILE=${TEST_NETWORK_HOME}/organizations/peerOrganizations/org1.example.com/peers/peer${var}.org1.example.com/tls/ca.crt
+    if [ "$CHANNEL_NAME" == "ch1" ]; then
+        for var in {0..2}; do
+            PEER_PORT=$(((($var + 7) * 1000) + 51))
+            export CORE_PEER_ADDRESS=peer${var}.org1.example.com:${PEER_PORT}
+            export CORE_PEER_TLS_CERT_FILE=${TEST_NETWORK_HOME}/organizations/peerOrganizations/org1.example.com/peers/peer${var}.org1.example.com/tls/server.crt
+            export CORE_PEER_TLS_KEY_FILE=${TEST_NETWORK_HOME}/organizations/peerOrganizations/org1.example.com/peers/peer${var}.org1.example.com/tls/server.key
+            export CORE_PEER_TLS_ROOTCERT_FILE=${TEST_NETWORK_HOME}/organizations/peerOrganizations/org1.example.com/peers/peer${var}.org1.example.com/tls/ca.crt
 
-        # set PEER_CONN_PARMS
-        PEER_CONN_PARMS=" --peerAddresses ${CORE_PEER_ADDRESS}"
-        TLSINFO=$(eval echo "--tlsRootCertFiles \$CORE_PEER_TLS_ROOTCERT_FILE")
-        PEER_CONN_PARMS="${PEER_CONN_PARMS} ${TLSINFO}"
+            # set PEER_CONN_PARMS
+            PEER_CONN_PARMS=" --peerAddresses ${CORE_PEER_ADDRESS}"
+            TLSINFO=$(eval echo "--tlsRootCertFiles \$CORE_PEER_TLS_ROOTCERT_FILE")
+            PEER_CONN_PARMS="${PEER_CONN_PARMS} ${TLSINFO}"
 
-        set -x
-        ${BIN_DIR}/peer lifecycle chaincode install ${CHAINCODE_PACKAGE_PATH} >&${LOG_PATH}
-        res=$?
-        { set +x; } 2>/dev/null
-        cat ${LOG_PATH}
-        verifyResult $res "Chaincode installation on peer${var}.org1 has failed"
-        echo "Chaincode is installed on peer${var}.org1"
-    done
+            set -x
+            ${BIN_DIR}/peer lifecycle chaincode install ${CHAINCODE_PACKAGE_PATH} >&${LOG_PATH}
+            res=$?
+            { set +x; } 2>/dev/null
+            cat ${LOG_PATH}
+            verifyResult $res "Chaincode installation on peer${var}.org1 has failed"
+            echo "Chaincode is installed on peer${var}.org1"
+        done
+    fi
 
     # approveformyorg
     for var in {0..0}; do
@@ -183,7 +183,10 @@ function verifyResult() {
 }
 
 function main() {
-    deployChaincode erc20 1.0 1
+    # ch1
+    deployChaincode ch1 erc20 1.0 1
+    # ch2
+    deployChaincode ch2 erc20 1.0 1
 }
 
 main
